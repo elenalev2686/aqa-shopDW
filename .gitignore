@@ -4,6 +4,7 @@ HELP.md
 .gradle
 .allure
 build/
+driver/
 !/
 
 ### STS ###
@@ -47,3 +48,5 @@ out/
 !aqa-shop.jar
 !**/src/main/**
 !**/src/test/**
+/driver/
+/driver/
