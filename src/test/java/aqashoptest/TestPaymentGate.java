@@ -10,13 +10,14 @@ import org.junit.jupiter.api.*;
 import java.sql.SQLException;
 
 import static base.DataGenerator.*;
+import static com.codeborne.selenide.Selenide.open;
 
 public class TestPaymentGate {
-    private FormPage formPage;
+     FormPage formPage;
 
     @BeforeEach
-    void setUpPage() {
-        formPage = new FormPage();
+    void setUp() {
+        formPage = open("http://localhost:8080", FormPage.class);
     }
 
     @BeforeAll
@@ -36,370 +37,370 @@ public class TestPaymentGate {
 
     @Test
     @DisplayName("Покупка активной дебетовой картой, валидные данные")
-    void shouldPayByApprovedCard() throws SQLException {
+    void shouldPayByApprovedCard() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
+        formPage.pushContinueButton();
         formPage.checkMessageSuccess();
-        DBUtils.checkPaymentStatus(Status.APPROVED);
+       DBUtils.getPaymentStatus(Status.APPROVED);
     }
 
     @Test
     @DisplayName("Покупка отклоненной дебетовой картой, валидные данные")
-    void shouldNoPayByDeclinedCard() throws SQLException {
+    void shouldNoPayByDeclinedCard() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444442");
+        formPage.setCardNumber(getCardNumberDeclined());
         formPage.setCardMonth(getDateMonth(0));
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
+        formPage.pushContinueButton();
         formPage.checkMessageError();
-        DBUtils.checkPaymentStatus(Status.DECLINED);
+        DBUtils.getPaymentStatus(Status.DECLINED);
     }
 
     @Test
     @DisplayName("Покупка дебетовой картой не из набора, валидные данные")
-    void shouldNoPayByUnknownCard() throws SQLException {
+    void shouldNoPayByUnknownCard() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444443");
+        formPage.setCardNumber(getCardNumberUnknown());
         formPage.setCardMonth(getDateMonth(0));
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
+        formPage.pushContinueButton();
         formPage.checkMessageError();
     }
 
     @Test
     @DisplayName("Покупка дебетовой картой, ввод месяца, при котором срок действия карты уже истек")
-    void shouldNotExpiredDateMonthField() throws SQLException {
+    void shouldNotExpiredDateMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(11));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongDate();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверно указан срок действия карты");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод несуществующего месяца")
-    void shouldNotPayInvalidMonthField() throws SQLException {
+    void shouldNotPayInvalidMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth("13");
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongDate();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверно указан срок действия карты");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, оставление поля месяц пустым")
-    void shouldNotPayEmptyMonthField() throws SQLException {
+    void shouldNotPayEmptyMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth("");
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле месяц спецсимволов")
-    void shouldNotPaySymbolMonthField() throws SQLException {
+    void shouldNotPaySymbolMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth("#$");
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Месяц букв (кириллица)")
-    void shouldNotPayRuMonthField() throws SQLException {
+    void shouldNotPayRuMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getRandomCardOwnerRu());
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Месяц букв (латинские)")
-    void shouldNotPayEnMonthField() throws SQLException {
+    void shouldNotPayEnMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getRandomCardOwner());
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Месяц однозначного числа")
-    void shouldNotPayOneNumberMonthField() throws SQLException {
+    void shouldNotPayOneNumberMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth("1");
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод нулевых значений в поле Месяц")
-    void shouldNotPayZeroMonthField() throws SQLException {
+    void shouldNotPayZeroMonthField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth("00");
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongDate();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверно указан срок действия карты");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод года, отстоящего от текущей даты более чем на 6 лет")
-    void shouldNotPayInvalidYearField() throws SQLException {
+    void shouldNotPayInvalidYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(6));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongDate();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверно указан срок действия карты");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, оставление поля Год пустым")
-    void shouldNotPayEmptyYearField() throws SQLException {
+    void shouldNotPayEmptyYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear("");
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод года, при котором срок действия карты уже истек")
-    void shouldNoPayExpiredDateYearField() throws SQLException {
+    void shouldNoPayExpiredDateYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYearMinus(1));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageOverDate();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Истёк срок действия карты");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Год спецсимволов")
-    void shouldNotPaySymbolYearField() throws SQLException {
+    void shouldNotPaySymbolYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear("#$");
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод  в поле Год букв (кириллица)")
-    void shouldNotPayRuYearField() throws SQLException {
+    void shouldNotPayRuYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getRandomCardOwnerRu());
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод  в поле Год букв (латинские)")
-    void shouldNotPayEnYearField() throws SQLException {
+    void shouldNotPayEnYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getRandomCardOwner());
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод  в поле Год однозначного числа")
-    void shouldNotPayOneNumberYearField() throws SQLException {
+    void shouldNotPayOneNumberYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear("1");
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод нулевых значений в поле Год")
-    void shouldNotPayZeroYearField() throws SQLException {
+    void shouldNotPayZeroYearField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear("00");
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageOverDate();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Истёк срок действия карты");
     }
 
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Владелец букв кириллицы.")
-    void shouldNotPayInvalidCardOwnerFieldRu() throws SQLException {
+    void shouldNotPayInvalidCardOwnerFieldRu() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwnerRu());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
+        formPage.pushContinueButton();
         formPage.checkMessageError();
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Владелец спецсимволов.")
-    void shouldNotPayInvalidCardOwnerFieldSymbol() throws SQLException {
+    void shouldNotPayInvalidCardOwnerFieldSymbol() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner("#%$@");
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
+        formPage.pushContinueButton();
         formPage.checkMessageError();
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле Владелец цифр.")
-    void shouldNotPayInvalidCardOwnerFieldNumbers() throws SQLException {
+    void shouldNotPayInvalidCardOwnerFieldNumbers() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomNumbers());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
+        formPage.pushContinueButton();
         formPage.checkMessageError();
     }
     @Test
     @DisplayName("Покупка дебетовой картой, оставление поля Владелец пустым.")
-    void shouldNotPayInvalidCardOwnerFieldEmpty() throws SQLException {
+    void shouldNotPayInvalidCardOwnerFieldEmpty() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner("");
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageRequiredField();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Поле обязательно для заполнения");
     }
 
     @Test
     @DisplayName("Покупка дебетовой картой, оставление поля CVC/CVV пустым.")
-    void shouldNoPayInvalidCVVField() throws SQLException {
+    void shouldNoPayInvalidCVVField() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV("");
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле CVC/CVV спецсимволов.")
-    void shouldNoPayInvalidCVVFieldSymbol() throws SQLException {
+    void shouldNoPayInvalidCVVFieldSymbol() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV("#$@");
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле CVC/CVV букв (кириллица).")
-    void shouldNoPayInvalidCVVFieldRu() throws SQLException {
+    void shouldNoPayInvalidCVVFieldRu() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCardOwnerRu());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле CVC/CVV букв (латинские).")
-    void shouldNoPayInvalidCVVFieldEn() throws SQLException {
+    void shouldNoPayInvalidCVVFieldEn() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCardOwner());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле CVC/CVV однозначного числа.")
-    void shouldNoPayInvalidCVVFieldOneNumber() throws SQLException {
+    void shouldNoPayInvalidCVVFieldOneNumber() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV("1");
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
     @Test
     @DisplayName("Покупка дебетовой картой, ввод в поле CVC/CVV двузначного числа.")
-    void shouldNoPayInvalidCVVFieldTwoNumber() throws SQLException {
+    void shouldNoPayInvalidCVVFieldTwoNumber() {
         formPage.buyForYourMoney();
-        formPage.setCardNumber("4444444444444441");
+        formPage.setCardNumber(getCardNumberValid());
         formPage.setCardMonth(getDateMonth(0));;
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV("01");
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
 
     @Test
     @DisplayName("Попытка покупки по карте c пустым номером")
-    void shouldNoPayEmptyCardNumberField() throws SQLException {
+    void shouldNoPayEmptyCardNumberField() {
         formPage.buyForYourMoney();
         formPage.setCardNumber("");
         formPage.setCardMonth(getDateMonth(0));
         formPage.setCardYear(getDateYear(0));
         formPage.setCardOwner(getRandomCardOwner());
         formPage.setCardCVV(getRandomCvCCvV());
-        formPage.pushСontinueButton();
-        formPage.checkMessageWrongFormat();
+        formPage.pushContinueButton();
+        formPage.checkMessageWrong("Неверный формат");
     }
 }

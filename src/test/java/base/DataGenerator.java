@@ -11,6 +11,16 @@ public class DataGenerator {
     private DataGenerator() {
     }
 
+    public static String getCardNumberValid() {
+        return ("4444444444444441");
+    }
+    public static String getCardNumberDeclined() {
+        return ("4444444444444442");
+    }
+
+    public static String getCardNumberUnknown() {
+        return faker.numerify("################");
+    }
     public static String getDateMonth(int shift) {
         return LocalDate.now().plusMonths(shift).format(DateTimeFormatter.ofPattern("MM"));
     }
