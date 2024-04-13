@@ -20,8 +20,8 @@
    
 #### 5. Запустить тесты:
    Для запуска тестов с базами данных выполнить команды:  
-   * gradlew test -Dbs.url=jdbc:postgres://localhost:5432/app
-   * gradlew test -Dbs.url=jdbc:mysql://localhost:3306/app
+   * gradlew test -Ddb.url=jdbc:postgres://localhost:5432/app
+   * gradlew test -Ddb.url=jdbc:mysql://localhost:3306/app
 
 #### 6. Сформировать отчеты командой:  
    * gradlew allureReport
